@@ -51,11 +51,15 @@ Configurar as váriaveis do ambiente no `appsettings.json`
       "Password": "maquina_token" // Token da máquina no SIoT 
     }
   },
+  "BUFFER": { // configurações do buffer de sinais
+    "CronSend": "0/30 * * * * ?", // intervalo de tempo no formato CRON para verificar o buffer e enviar os sinais
+    "TotalFiles": 10000 // limite de arquivos a serem enviados no intervalo
+  },
   "IntervalSend": 10000 // Intervalo para envio dos sinais para o SIoT,
   "DB": {
     "DaysRetainInDB": 3, // Quantidade de dias para excluir os dados do banco
     "Provider": "SQLLite", // Tipo de banco, nessa versão está disponível (SQLLite e MYSQL)
-    "Connection": "Data Source=E:\\Projetos\\Siot\\middlewares\\middleware-nmea-dotnet\\Middleware.App\\bin\\Debug\\net5.0\\teste.db" // Conexão do banco de dados
+    "Connection": "Data Source=E:\\Data\\teste.db" // Conexão do banco de dados
   }
 }
 ```
@@ -72,6 +76,26 @@ Configurar `config.modbus.json`:
       "signalId": "atual", // ID do sinal no SIOT,
       "typeAddress": "register", // Tipo de endereço ("register", "coil")
       "isConvertToFloat": false // (* Opcional) Valor lido está em hexadecimal e será convertido em float
+    },
+    {
+       "sensorId": "gps", // ID do sensor no SIoT
+       "signalId": "coordinate", // ID do sinal no SIOT,
+       "fieldsCompose": [ // Campos compostos que criam um objeto como valor do sinal
+        {
+          "propName":  "latitude", // nome da propriedade do objeto
+          "address": 10, // Endereço do MODBUS
+          "registers": 2, // Quantidade de registros
+          "typeAddress": "register", // Tipo de endereço ("register", "coil")
+          "isConvertToFloat": false // (* Opcional) Valor lido está em hexadecimal e será convertido em float
+        },
+        {
+          "propName":  "longitude", // nome da propriedade do objeto
+          "address": 12, // Endereço do MODBUS
+          "registers": 2, // Quantidade de registros
+          "typeAddress": "register", // Tipo de endereço ("register", "coil")
+          "isConvertToFloat": false // (* Opcional) Valor lido está em hexadecimal e será convertido em float
+        }
+      ] // nesse caso como exemplo valor do sinal seria { "latitude": 15.0000, "longitude": 45.155 }
     }
   ]
 }
@@ -81,7 +105,6 @@ Configurar `config.nmea.json` utilizando as setenças listadas abaixo:
 ```
 { 
   "idMachine": "maquina1", // ID da máquina no SIoT
-  "token": "token", // Token da máquina no SIoT 
   "items": [
     {
       "sentenceId": "MTW", // Tipo de setença NMEA (Utilizar as listadas abaixo)
