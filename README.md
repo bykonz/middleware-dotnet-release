@@ -6,7 +6,7 @@ Middleware de integração de NMEA e MODBUS para SIOT via protocolo padrão MQTT
 Necessário instalar [.NET 5](https://dotnet.microsoft.com/download/dotnet/5.0)
 
 
-Realizar o download da última versão do [Middleware.WorkerService.App](https://github.com/konztec/middleware-dotnet-release/releases/download/2.0.7/Middleware.WorkerService.App.2.0.7.zip)
+Realizar o download da última versão do [Middleware.WorkerService.App](https://github.com/konztec/middleware-dotnet-release/releases/download/2.1.0/Middleware.WorkerService.App.2.1.0.zip)
 
 Extrair os arquivos compactados em um diretório.
 
