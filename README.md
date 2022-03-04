@@ -3,10 +3,10 @@ Middleware de integração de NMEA e MODBUS para SIOT via protocolo padrão MQTT
 
 ### Instalação execução
 
-Necessário instalar [.NET 5](https://dotnet.microsoft.com/download/dotnet/5.0)
+Necessário instalar [.NET 6](https://dotnet.microsoft.com/download/dotnet/6.0)
 
 
-Realizar o download da última versão do [Middleware.WorkerService.App](https://github.com/konztec/middleware-dotnet-release/releases/download/2.1.3/Middleware.WorkerService.App.2.1.3.zip)
+Realizar o download da última versão do [Middleware.WorkerService.App](https://github.com/konztec/middleware-dotnet-release/releases/tag/2.3.0)
 
 Extrair os arquivos compactados em um diretório.
 
@@ -72,14 +72,12 @@ Configurar `config.modbus.json`:
     {
       "address": 5, // Endereço do MODBUS
       "registers": 2, // Quantidade de registros
-      "sensorId": "temperatura_agua", // ID do sensor no SIoT
-      "signalId": "atual", // ID do sinal no SIOT,
+      "idSensor": "temperatura_agua", // ID do sensor no SIoT
       "typeAddress": "register", // Tipo de endereço ("register", "coil")
       "isConvertToFloat": false // (* Opcional) Valor lido está em hexadecimal e será convertido em float
     },
     {
-       "sensorId": "gps", // ID do sensor no SIoT
-       "signalId": "coordinate", // ID do sinal no SIOT,
+       "idSensor": "gps", // ID do sensor no SIoT
        "fieldsCompose": [ // Campos compostos que criam um objeto como valor do sinal
         {
           "propName":  "latitude", // nome da propriedade do objeto
@@ -107,12 +105,33 @@ Configurar `config.nmea.json` utilizando as setenças listadas abaixo:
   "idMachine": "maquina1", // ID da máquina no SIoT
   "items": [
     {
-      "sentenceId": "MTW", // Tipo de setença NMEA (Utilizar as listadas abaixo)
-      "sensorId": "temperatura_agua", // ID do sensor no SIoT
-      "signals": [
+      "sentence": "MTW", // Tipo de setença NMEA (Utilizar as listadas abaixo)
+      "idSensor": "temperatura_agua", // ID do sensor no SIoT
+      "variable": "Degrees" // Propriedade da setença NMEA  (Utilizar a propriedade das sentenças listadas acima)
+    },
+
+    { // Modelo condicionado
+      "sentence": "MWV", // Tipo de setença NMEA (Utilizar as listadas abaixo)
+      "conditions": [
         {
-          "signalId": "atual", // ID do sinal no SIoT
-          "packet": "Degrees" // Propriedade da setença NMEA  (Utilizar a propriedade das sentenças listadas acima)
+          "when": {
+            "variable": "Reference",
+            "value": "T"
+          },
+          "then": {
+            "idSensor": "angulo_vento_verdadeiro",
+            "variable": "WindAngle"
+          }
+        },
+        {
+          "when": {
+            "variable": "Reference",
+            "value": "R"
+          },
+          "then": {
+            "idSensor": "angulo_vento_relativo",
+            "variable": "WindAngle"
+          }
         }
       ]
     }
