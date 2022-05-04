@@ -1,5 +1,5 @@
-# Middleware MODBUS e NMEA - S.IoT
-Middleware de integração de NMEA e MODBUS para SIOT via protocolo padrão MQTT
+# Middleware MODBUS e NMEA - IoTLog
+Middleware de integração de NMEA e MODBUS para IoTLog via protocolo padrão MQTT
 
 ### Instalação execução
 
@@ -9,8 +9,6 @@ Necessário instalar [.NET 6](https://dotnet.microsoft.com/download/dotnet/6.0)
 Realizar o download da última versão do [Middleware.WorkerService.App](https://github.com/bykonz/middleware-dotnet-release/releases)
 
 Extrair os arquivos compactados em um diretório.
-
-Verifique a documentação do [cadastro e geração de token no SIoT](https://blog.konztec.com/cadastro-maquina-token-integracao-siot/) para obter a `maquina_id` e `maquina_token` 
 
 Configurar as váriaveis do ambiente no `appsettings.json`
 ```
@@ -28,13 +26,13 @@ Configurar as váriaveis do ambiente no `appsettings.json`
     },
     "IntervalSave": 1000 // intervalo para salvar no banco de dados
   },
-  "MODBUS": { // configurações de conexão com o NMEA
+  "MODBUS": { // configurações de conexão com o MODBUS
     "Mode": "TCP", // modo de comunicação disponível (TCP ou SERIAL) 
     "TCP": { // configurações para o modo TCP, informar apenas se o `Mode: TCP`
       "Endpoint": "127.0.0.1", // Endpoint TCP
       "Port": 502 // Porta TCP
     },
-    "Serial": { configurações para o modo SERIAL, informar apenas se o `Mode: SERIAL`
+    "Serial": {  //configurações para o modo SERIAL, informar apenas se o `Mode: SERIAL`
       "Port": "COM2", // porta serial
       "Baudrate": 9600, // Baudrate
       "Type": "RTU" // opções disponíveis (RTU or ASCII)
@@ -42,20 +40,20 @@ Configurar as váriaveis do ambiente no `appsettings.json`
     "SlaveID": 1, // identificador do slave
     "IntervalSave": 1000 // intervalo para salvar no banco de dados
   },
-  "MQTT": { // configurações da conexão MQTT para envio dos sinais para o broker do SIoT
+  "MQTT": { // configurações da conexão MQTT para envio dos sinais para o broker do IoTLog
     "Endpoint": "siot-broker-mqtt-dev.konztec.com.br", // endpoint do MQTT
     "Port": 8883, // porta MQTT
     "TLS": true // utiliza SSL/TLS (true ou false),
     "Auth": {
-      "Username": "maquina_id", // ID da máquina no SIoT
-      "Password": "maquina_token" // Token da máquina no SIoT 
+      "Username": "maquina_id", // ID da máquina no IoTLog
+      "Password": "maquina_token" // Token da máquina no IoTLog 
     }
   },
   "BUFFER": { // configurações do buffer de sinais
     "CronSend": "0/30 * * * * ?", // intervalo de tempo no formato CRON para verificar o buffer e enviar os sinais
     "TotalFiles": 10000 // limite de arquivos a serem enviados no intervalo
   },
-  "IntervalSend": 10000 // Intervalo para envio dos sinais para o SIoT,
+  "IntervalSend": 10000 // Intervalo para envio dos sinais para o IoTLog,
   "DB": {
     "DaysRetainInDB": 3, // Quantidade de dias para excluir os dados do banco
     "Provider": "SQLLite", // Tipo de banco, nessa versão está disponível (SQLLite e MYSQL)
@@ -67,17 +65,17 @@ Configurar as váriaveis do ambiente no `appsettings.json`
 Configurar `config.modbus.json`:
 ```
 { 
-  "idMachine": "maquina1", // ID da máquina no SIoT
+  "idMachine": "maquina1", // ID da máquina no IoTLog
   "items": [
     {
       "address": 5, // Endereço do MODBUS
       "registers": 2, // Quantidade de registros
-      "idSensor": "temperatura_agua", // ID do sensor no SIoT
+      "idSensor": "temperatura_agua", // ID do sensor no IoTLog
       "typeAddress": "register", // Tipo de endereço ("register", "coil")
       "isConvertToFloat": false // (* Opcional) Valor lido está em hexadecimal e será convertido em float
     },
     {
-       "idSensor": "gps", // ID do sensor no SIoT
+       "idSensor": "gps", // ID do sensor no IoTLog
        "fieldsCompose": [ // Campos compostos que criam um objeto como valor do sinal
         {
           "propName":  "latitude", // nome da propriedade do objeto
@@ -93,7 +91,7 @@ Configurar `config.modbus.json`:
           "typeAddress": "register", // Tipo de endereço ("register", "coil")
           "isConvertToFloat": false // (* Opcional) Valor lido está em hexadecimal e será convertido em float
         }
-      ] // nesse caso como exemplo valor do sinal seria { "latitude": 15.0000, "longitude": 45.155 }
+      ] // nesse caso como exemplo valor do sinal seria [15.0000, 45.155 ]
     }
   ]
 }
@@ -102,11 +100,11 @@ Configurar `config.modbus.json`:
 Configurar `config.nmea.json` utilizando as setenças listadas abaixo:
 ```
 { 
-  "idMachine": "maquina1", // ID da máquina no SIoT
+  "idMachine": "maquina1", // ID da máquina no IoTLog
   "items": [
     {
       "sentence": "MTW", // Tipo de setença NMEA (Utilizar as listadas abaixo)
-      "idSensor": "temperatura_agua", // ID do sensor no SIoT
+      "idSensor": "temperatura_agua", // ID do sensor no IoTLog
       "variable": "Degrees" // Propriedade da setença NMEA  (Utilizar a propriedade das sentenças listadas acima)
     },
 
@@ -255,9 +253,7 @@ Configurar `config.nmea.json` utilizando as setenças listadas abaixo:
 
 Para executar como serviço no Windows
 ```
-sc create MidSiot binpath="C:\middleware\Middleware.WorkerService.App.exe C:\middleware\" start=auto
+sc create MiddlewareIotLog binpath="C:\middleware\Middleware.WorkerService.App.exe C:\middleware" start=auto
 ```
 
- Mais informações e integrações com S.IoT, acessando [Blog Documentações](https://blog.konztec.com/documentacao)
-
- Conheça o S.IoT, acessando [S.IoT](https://www.konztec.com/)
+ Conheça o IoTLog, acessando [Bykonz](https://www.bykonz.com/)
