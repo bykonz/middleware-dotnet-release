@@ -8,12 +8,12 @@ Middleware de integração de NMEA e MODBUS para IoTLog via protocolo padrão MQ
 
 Necessário instalar [.NET 6](https://dotnet.microsoft.com/download/dotnet/6.0)
 
-
 Realizar o download da última versão do [Middleware.WorkerService.App](https://github.com/bykonz/middleware-dotnet-release/releases)
 
 Extrair os arquivos compactados em um diretório.
 
 Configurar as váriaveis do ambiente no `appsettings.json`
+
 ```
 {
   "NMEA": { // configurações de conexão com o NMEA
@@ -30,7 +30,7 @@ Configurar as váriaveis do ambiente no `appsettings.json`
     "IntervalSave": 1000 // intervalo para salvar no banco de dados
   },
   "MODBUS": { // configurações de conexão com o MODBUS
-    "Mode": "TCP", // modo de comunicação disponível (TCP ou SERIAL) 
+    "Mode": "TCP", // modo de comunicação disponível (TCP ou SERIAL)
     "TCP": { // configurações para o modo TCP, informar apenas se o `Mode: TCP`
       "Endpoint": "127.0.0.1", // Endpoint TCP
       "Port": 502 // Porta TCP
@@ -49,7 +49,7 @@ Configurar as váriaveis do ambiente no `appsettings.json`
     "TLS": true // utiliza SSL/TLS (true ou false),
     "Auth": {
       "Username": "maquina_id", // ID da máquina no IoTLog
-      "Password": "maquina_token" // Token da máquina no IoTLog 
+      "Password": "maquina_token" // Token da máquina no IoTLog
     }
   },
   "BUFFER": { // configurações do buffer de sinais
@@ -66,16 +66,33 @@ Configurar as váriaveis do ambiente no `appsettings.json`
 ```
 
 Configurar `config.modbus.json`:
+
 ```
-{ 
+{
   "idMachine": "maquina1", // ID da máquina no IoTLog
   "items": [
     {
       "address": 5, // Endereço do MODBUS
       "registers": 2, // Quantidade de registros
       "idSensor": "temperatura_agua", // ID do sensor no IoTLog
-      "typeAddress": "register", // Tipo de endereço ("register", "coil")
+      "typeAddress": "inputRegister", // Tipo de endereço ("inputRegister", "holdingRegister", "coil")
       "isConvertToFloat": false // (* Opcional) Valor lido está em hexadecimal e será convertido em float
+    },
+    {
+      "address": 5, // Endereço do MODBUS
+      "registers": 2, // Quantidade de registros
+      "idSensor": "temperatura_agua", // ID do sensor no IoTLog
+      "typeAddress": "inputRegister", // Tipo de endereço ("inputRegister", "holdingRegister", "coil")
+      "calcRange": { // (Opcional) Cálculo de interpolação linear para valores equivalentes
+          "minRange": -20, // mínimo valor esperado
+          "maxRange": 20, // máximo valor esperado
+          "minSignal": 0, // mínimo valor endereço de memória
+          "maxSignal": 32756, // máximo valor endereço de memória
+          "precision": 1, // número de casas decimais
+          "isCalculateRange": true, // se ativa o cálculo de interpolação
+          "sizeDecimals": 1 // atua como potência de 10 para dividir sobre o valor resultante, por exemplo se for 2 é igual a 10² = o valor resultante será divido por 100 (que é igual a 10² = 10 x 10)
+          "isMultiplySizeDecimals": true // caso true, o sizeDecimals vai atuar como multiplicação e não divisão
+       }
     },
     {
        "idSensor": "gps", // ID do sensor no IoTLog
@@ -84,14 +101,14 @@ Configurar `config.modbus.json`:
           "propName":  "latitude", // nome da propriedade do objeto
           "address": 10, // Endereço do MODBUS
           "registers": 2, // Quantidade de registros
-          "typeAddress": "register", // Tipo de endereço ("register", "coil")
+          "typeAddress": "inputRegister", // Tipo de endereço ("inputRegister", "holdingRegister", "coil")
           "isConvertToFloat": false // (* Opcional) Valor lido está em hexadecimal e será convertido em float
         },
         {
           "propName":  "longitude", // nome da propriedade do objeto
           "address": 12, // Endereço do MODBUS
           "registers": 2, // Quantidade de registros
-          "typeAddress": "register", // Tipo de endereço ("register", "coil")
+          "typeAddress": "inputRegister", // Tipo de endereço ("inputRegister", "holdingRegister", "coil")
           "isConvertToFloat": false // (* Opcional) Valor lido está em hexadecimal e será convertido em float
         }
       ] // nesse caso como exemplo valor do sinal seria [15.0000, 45.155 ]
@@ -101,8 +118,9 @@ Configurar `config.modbus.json`:
 ```
 
 Configurar `config.nmea.json` utilizando as setenças listadas abaixo:
+
 ```
-{ 
+{
   "idMachine": "maquina1", // ID da máquina no IoTLog
   "items": [
     {
@@ -141,122 +159,171 @@ Configurar `config.nmea.json` utilizando as setenças listadas abaixo:
 ```
 
 [Codecs NMEA](https://gpsd.gitlab.io/gpsd/NMEA.html) disponíveis até a versão atual e suas propriedades/tipo de variável:
-   - `GGA` ***Global Positioning System Fix Data***
-      - FixTime *TimeSpan*
-      - Latitude *Float*
-      - Longitude *Float*
-      - NumberOfSatellites *Int*
-      - HorizontalDilution *Float*
-      - AltitudeUnits *String*
-      - FixQuality *Int* 
-        - Invalid = 0
-        - GpsFix = 1
-        - DgpsFix = 2
-        - PpsFix = 3
-        - Rtk = 4
-        - FloatRtk = 5
-        - Estimated = 6
-        - ManualInput = 7
-        - Simulation = 8
-      - Altitude *Float*
-      - HeightOfGeoId *Float*
-      - HeightOfGeoIdUnits *String*
-      - TimeSpanSinceDgpsUpdate *Int*
-      - DgpsStationId *Int*
-   - `HDT` ***Heading - True***
-      - Heading *Float*
-   - `VTG` ***Track made good and Ground speed***
-      - TrackTrue *Float*
-      - TrackMagnetic *Float*
-      - SpeedKnots *Float*
-      - SpeedKmph *Float*
-      - FaaMode  *String*
-   - `DBK` ***Depth Below Keel***
-      - DepthFeet *Float*
-      - DepthMeters *Float*
-      - DepthFathoms *Float*   
-   - `DBS` ***Depth Below Surface***
-      - DepthFeet *Float*
-      - DepthMeters *Float*
-      - DepthFathoms *Float*
-   - `DBT` ***Depth below transducer***
-      - DepthFeet *Float*
-      - DepthMeters *Float*
-      - DepthFathoms *Float*
-   - `DPT` ***Depth of Water***
-      - Depth *Float*
-      - OffsetTransducer *Float*
-      - MaximumRangeScale *Float*
-   - `GLL` ***Geographic Position - Latitude/Longitude***
-      - Latitude *Float*
-      - Longitude *Float*
-      - Time *TimeSpan*
-      - Status *String*
-      - FaaMode *String*
-   - `GSA` ***Active satellites and dilution of precision***
-      - SelectionMode *Int*
-        - Auto = 0
-        - Manual = 1
-      - FixMode *Int*
-        - NotAvailable = 1
-        - Fix2D = 2
-        - Fix3D = 3
-      - SatelliteIDs *Int[]*
-      - Pdop *Float*
-      - Hdop *Float*
-      - Vdop *Float*
-   - `MTW` ***Mean Temperature of Water***
-      - Degrees *Float*
-      - UnitMeasurement *String*
-   - `MWD` ***Wind Direction***
-      - WindAngleTrue *Float*
-      - WindAngleMagnetic *Float*
-      - SpeedKnots *Float*
-      - SpeedMps *Float*
-   - `MWV` ***Wind Speed and Angle***
-      - WindAngle *Float*
-      - Speed *Float*
-      - Reference *String* *(R = Relative, T = True)*
-      - Units *String* *(K = km/hr, M = m/s, N = knots, S = statute)*
-      - Status *Int*
-        - Valid = 0
-        - Invalid = 1
-   - `RMC` ***Recommended Minimum Navigation Information***
-      - DateTime *DateTime*
-      - Status *String*
-      - Latitude *Float*
-      - Longitude *Float*
-      - SpeedKnots *Float*
-      - TrackTrue *Float*
-      - Variation *Float*
-      - VariationPole *String* *(E or W)*
-      - FaaMode *String*
-   - `RPM` ***Revolutions***
-      - Source *Int*
-        - Shaft = 0
-        - Engine = 1
-      - SourceValue *Float*
-      - SpeedMinute *Float*
-      - PropellerPitch *Float*
-      - Status *Int*
-        - Valid = 0
-        - Invalid = 1
-   - `VHW` ***Water speed and heading***
-      - DegreesTrue *Float*
-      - DegreesMagnetic *Float*
-      - SpeedKnots *Float*
-      - SpeedKmph *Float*
-   - `ZDA` ***Time & Date - UTC, day, month, year and local time zone***
-      - DateTime *DateTime*
-      - LocalZoneHours *Int*
-      - LocalZoneMinutes *Int*
+
+- `GGA` **_Global Positioning System Fix Data_**
+  - FixTime _TimeSpan_
+  - Latitude _Float_
+  - Longitude _Float_
+  - NumberOfSatellites _Int_
+  - HorizontalDilution _Float_
+  - AltitudeUnits _String_
+  - FixQuality _Int_
+    - Invalid = 0
+    - GpsFix = 1
+    - DgpsFix = 2
+    - PpsFix = 3
+    - Rtk = 4
+    - FloatRtk = 5
+    - Estimated = 6
+    - ManualInput = 7
+    - Simulation = 8
+  - Altitude _Float_
+  - HeightOfGeoId _Float_
+  - HeightOfGeoIdUnits _String_
+  - TimeSpanSinceDgpsUpdate _Int_
+  - DgpsStationId _Int_
+- `HDT` **_Heading - True_**
+  - Heading _Float_
+- `VTG` **_Track made good and Ground speed_**
+  - TrackTrue _Float_
+  - TrackMagnetic _Float_
+  - SpeedKnots _Float_
+  - SpeedKmph _Float_
+  - FaaMode _String_
+- `DBK` **_Depth Below Keel_**
+  - DepthFeet _Float_
+  - DepthMeters _Float_
+  - DepthFathoms _Float_
+- `DBS` **_Depth Below Surface_**
+  - DepthFeet _Float_
+  - DepthMeters _Float_
+  - DepthFathoms _Float_
+- `DBT` **_Depth below transducer_**
+  - DepthFeet _Float_
+  - DepthMeters _Float_
+  - DepthFathoms _Float_
+- `DPT` **_Depth of Water_**
+  - Depth _Float_
+  - OffsetTransducer _Float_
+  - MaximumRangeScale _Float_
+- `GLL` **_Geographic Position - Latitude/Longitude_**
+  - Latitude _Float_
+  - Longitude _Float_
+  - Time _TimeSpan_
+  - Status _String_
+  - FaaMode _String_
+- `GSA` **_Active satellites and dilution of precision_**
+  - SelectionMode _Int_
+    - Auto = 0
+    - Manual = 1
+  - FixMode _Int_
+    - NotAvailable = 1
+    - Fix2D = 2
+    - Fix3D = 3
+  - SatelliteIDs _Int[]_
+  - Pdop _Float_
+  - Hdop _Float_
+  - Vdop _Float_
+- `MTW` **_Mean Temperature of Water_**
+  - Degrees _Float_
+  - UnitMeasurement _String_
+- `MWD` **_Wind Direction_**
+  - WindAngleTrue _Float_
+  - WindAngleMagnetic _Float_
+  - SpeedKnots _Float_
+  - SpeedMps _Float_
+- `MWV` **_Wind Speed and Angle_**
+  - WindAngle _Float_
+  - Speed _Float_
+  - Reference _String_ _(R = Relative, T = True)_
+  - Units _String_ _(K = km/hr, M = m/s, N = knots, S = statute)_
+  - Status _Int_
+    - Valid = 0
+    - Invalid = 1
+- `RMC` **_Recommended Minimum Navigation Information_**
+  - DateTime _DateTime_
+  - Status _String_
+  - Latitude _Float_
+  - Longitude _Float_
+  - SpeedKnots _Float_
+  - TrackTrue _Float_
+  - Variation _Float_
+  - VariationPole _String_ _(E or W)_
+  - FaaMode _String_
+- `RPM` **_Revolutions_**
+  - Source _Int_
+    - Shaft = 0
+    - Engine = 1
+  - SourceValue _Float_
+  - SpeedMinute _Float_
+  - PropellerPitch _Float_
+  - Status _Int_
+    - Valid = 0
+    - Invalid = 1
+- `VHW` **_Water speed and heading_**
+  - DegreesTrue _Float_
+  - DegreesMagnetic _Float_
+  - SpeedKnots _Float_
+  - SpeedKmph _Float_
+- `ZDA` **_Time & Date - UTC, day, month, year and local time zone_**
+  - DateTime _DateTime_
+  - LocalZoneHours _Int_
+  - LocalZoneMinutes _Int_
 
 <br/>
 <br/>
 
-Para executar como serviço no Windows
+---
+
+#### Windows
+
+Executando como serviço
+
 ```
 sc create MiddlewareIotLog binpath="C:\middleware\Middleware.WorkerService.App.exe C:\middleware" start=auto
 ```
 
- Conheça o IoTLog, acessando [Bykonz](https://www.bykonz.com/)
+---
+
+#### Linux
+
+Executando como serviço
+
+Adicionar permissão para executar o arquivo extraído
+
+```
+chmod +x Middleware.WorkerService.App
+```
+
+Criar o arquivo `MiddlewareIoTLog.service` e adicionar os dados abaixo
+
+```
+sudo nano /etc/systemd/system/MiddlewareIoTLog.service
+```
+
+```
+[Unit]
+Description=Middleware IoTLog
+
+[Service]
+WorkingDirectory=/home/Middleware/
+ExecStart=/home/Middleware/Middleware.WorkerService.App
+SyslogIdentifier=MiddlewareIoTLog
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Reiniciar daemon e ativiar o serviço
+
+```
+sudo systemctl daemon-reload
+sudo systemctl start MiddlewareIoTLog
+sudo systemctl enable MiddlewareIoTLog
+```
+
+---
+
+Conheça o IoTLog, acessando [Bykonz](https://www.bykonz.com/)

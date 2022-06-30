@@ -72,8 +72,24 @@ Configure `config.modbus.json` case the protocol is 'MODBUS':
       "address": 5, // MODBUS address
       "registers": 2, // Number of registers
       "idSensor": "temperatura_agua", // ID sensor in IoTLog
-      "typeAddress": "register", // Type of address (use "register" or "coil")
+      "typeAddress": "inputRegister", // Type of address (use "inputRegister", "holdingRegister" or "coil")
       "isConvertToFloat": false // (* Optional) Value read is in hexadecimal and will be converted to float
+    },
+    {
+      "address": 5, // MODBUS address
+      "registers": 2, // Number of registers
+      "idSensor": "temperatura_agua", // ID sensor in IoTLog
+      "typeAddress": "inputRegister", // Type of address  ("inputRegister", "holdingRegister", "coil")
+      "calcRange": { // (Opcional) Linear interpolation calculation for equivalent values
+          "minRange": -20, // minimum expected value
+          "maxRange": 20, // maximum expected value
+          "minSignal": 0, // minimum memory address value
+          "maxSignal": 32756, // maximum memory address value
+          "precision": 1, // number of decimal places
+          "isCalculateRange": true, // interpolation calculation is enabled
+          "sizeDecimals": 1 // acts as a power of 10 to divide over the resulting value, for example if 2 is equal to 10² = the resulting value will be divided by 100 (which is equal to 10² = 10 x 10)
+          "isMultiplySizeDecimals": true // if true, sizeDecimals will act as multiplication and not divide
+        }
     },
     {
        "idSensor": "gps", // ID sensor in IoTLog
@@ -82,14 +98,14 @@ Configure `config.modbus.json` case the protocol is 'MODBUS':
           "propName":  "latitude", // object property name
           "address": 10, // MODBUS address
           "registers": 2, // Number of registers
-          "typeAddress": "register", // Type of address (use "register" or "coil")
+          "typeAddress": "inputRegister", // Type of address (use "inputRegister", "holdingRegister" or "coil")
           "isConvertToFloat": false // (* Optional) Value read is in hexadecimal and will be converted to float
         },
         {
           "propName":  "longitude", // object property name
           "address": 12, // MODBUS address
           "registers": 2, // Number of registers
-          "typeAddress": "register", // Type of address (use "register" or "coil")
+          "typeAddress": "inputRegister", // Type of address (use "inputRegister", "holdingRegister" or "coil")
           "isConvertToFloat": false // (* Optional) Value read is in hexadecimal and will be converted to float
         }
       ] // in this case as an example generate signal value is [15.0000, 45.155 ]
@@ -253,9 +269,50 @@ If you need a new sentence, please enter in contact with our team.
 <br/>
 <br/>
 
-To run as a service on Windows
+-----
+
+#### Windows
+Run as service
 ```
-sc create MiddlewareIoTLog binpath="C:\middleware\Middleware.WorkerService.App.exe C:\middleware" start=auto
+sc create MiddlewareIotLog binpath="C:\middleware\Middleware.WorkerService.App.exe C:\middleware" start=auto
 ```
+
+
+-----
+#### Linux
+
+Run as service
+
+Add permission to execute extracted file
+```
+chmod +x Middleware.WorkerService.App
+```
+
+Create file `MiddlewareIoTLog.service` and add data below:
+```
+sudo nano /etc/systemd/system/MiddlewareIoTLog.service
+```
+```
+[Unit]
+Description=Middleware IoTLog
+
+[Service]
+WorkingDirectory=/home/Middleware/
+ExecStart=/home/Middleware/Middleware.WorkerService.App
+SyslogIdentifier=MiddlewareIoTLog
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+Reload daemon and active service
+```
+sudo systemctl daemon-reload
+sudo systemctl start MiddlewareIoTLog
+sudo systemctl enable MiddlewareIoTLog
+```
+
+-----
 
  Get to know IoTLog by accessing [Bykonz](https://www.bykonz.com/)
